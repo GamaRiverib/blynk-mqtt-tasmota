@@ -1,7 +1,7 @@
 version: "3.1"
 services:
   blynk-bridge:
-    image: blynk-bridge:latest
+    image: gamariverib/blynk-bridge:latest
     container_name: blynk-bridge
     environment: 
       - BLYNK_AUTH_CODE=FB5TgNpi4BCk12Q2vF8MHvIpWeQmRdJ-

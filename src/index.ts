@@ -77,8 +77,10 @@ function start(): void {
     const v = new blynkClient.VirtualPin(index);
     v.on("write", (param: any) => {
       const data = device.writeState(param);
-      mqttClient.publish(data.topic, data.value);
-      logger.info(`V${index} write ${data.value}`);
+      if(data) {
+        mqttClient.publish(data.topic, data.value);
+        logger.info(`V${index} write ${data.value}`);
+      }
     });
     v.on("read", () => {
       const state: any = device.readState();
