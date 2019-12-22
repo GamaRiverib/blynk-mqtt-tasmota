@@ -1,33 +1,35 @@
 #!/usr/bin/env node
 
+import { join } from "path";
+import { readFileSync } from "fs";
+
 import winston = require("winston");
 import blynkLib = require("blynk-library");
-import { connect, MqttClient, OnMessageCallback, Packet, IClientOptions, IClientSubscribeOptions, ISubscriptionGrant } from "mqtt";
+import { connect, MqttClient, OnMessageCallback, Packet,
+         IClientOptions, IClientSubscribeOptions, ISubscriptionGrant } from "mqtt";
+
 import { getLogger } from "./logger";
-import { configuration, PinConfiguration } from "./config";
+import { TasmotaDevice, tasmotaDeviceFactory } from "./devices/tasmota";
 
 const logger: winston.Logger = getLogger("[BLYNKBRIDGE]");
 
-let topics: Array<string> = [];
-configuration.forEach((config: PinConfiguration) => {
-  config.topics.forEach((t: string) => topics.push(t));
-});
-
-const BLYNK_AUTH_CODE: string = "FB5TgNpi4BCk12Q2vF8MHvIpWeQmRdJ-";
+const BLYNK_AUTH_CODE: string = process.env.BLYNK_AUTH_CODE;
 
 const BLYNK_OPTS: any = {
   connector: new blynkLib.TcpClient({
-    addr: "192.168.0.120",
-    port: 8400
+    addr: process.env.BLYNK_HOST,
+    port: parseInt(process.env.BLYNK_PORT)
   })
 };
 
-const MQTT_HOST: string = "mqtt://192.168.0.117:1883";
+const MQTT_HOST: string = process.env.MQTT_HOST;
 
 const MQTT_OPTS: IClientOptions = {
 
 };
 
+let devices: Array<TasmotaDevice>;
+let topics: Array<string> = [];
 let blynkClient: any;
 let mqttClient: MqttClient;
 
@@ -55,27 +57,35 @@ function onMqttConnected(): void {
 
 const onMqttMessage: OnMessageCallback = (topic: string, payload: Buffer, packet: Packet): void => {
   logger.info(`${topic} ${payload.toString()}`);
-  configuration.forEach((v: PinConfiguration) => v.onMessage(topic, payload));
+  devices.forEach((device: TasmotaDevice) => device.onMessage(topic, payload));
 };
 
 function start(): void {
   logger.info("Starting...");
 
+  logger.info("Connecting to Blynk Server...");
   blynkClient = new blynkLib.Blynk(BLYNK_AUTH_CODE, BLYNK_OPTS);
 
-  configuration.forEach((p: PinConfiguration, index: number) => {
+  logger.info("Loading devices configuration...");
+  const path: string = join(__dirname, "../devices.json");
+  const data: Buffer = readFileSync(path);
+  const json: any = JSON.parse(data.toString());
+  devices = tasmotaDeviceFactory(json);
+
+  devices.forEach((device: TasmotaDevice, index: number) => {
+    device.topics.forEach((topic: string) => topics.push(topic));
     const v = new blynkClient.VirtualPin(index);
     v.on("write", (param: any) => {
-      const data = p.writeState(param);
+      const data = device.writeState(param);
       mqttClient.publish(data.topic, data.value);
       logger.info(`V${index} write ${data.value}`);
     });
     v.on("read", () => {
-      const state: any = p.readState();
+      const state: any = device.readState();
       v.write(state);
       logger.info(`V${index} read ${state}`);
     });
-    p.updateState((state: any): void => {
+    device.updateState((state: any): void => {
       v.write(state);
       logger.info(`V${index} update ${state}`);
     });
@@ -85,6 +95,7 @@ function start(): void {
   blynkClient.on("disconnect", onBlynkDisconnected);
   logger.info("Connecting to Blynk Server...");
 
+  logger.info("Connecting to MQTT Broker...");
   mqttClient = connect(MQTT_HOST, MQTT_OPTS);
   mqttClient.on("connect", onMqttConnected);
   mqttClient.on("message", onMqttMessage);
