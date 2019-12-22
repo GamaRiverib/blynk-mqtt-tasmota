@@ -67,7 +67,7 @@ function start(): void {
   blynkClient = new blynkLib.Blynk(BLYNK_AUTH_CODE, BLYNK_OPTS);
 
   logger.info("Loading devices configuration...");
-  const path: string = join(__dirname, "../devices.json");
+  const path: string = join(__dirname, "../data/devices.json");
   const data: Buffer = readFileSync(path);
   const json: any = JSON.parse(data.toString());
   devices = tasmotaDeviceFactory(json);

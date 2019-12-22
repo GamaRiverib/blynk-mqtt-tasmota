@@ -1,0 +1,13 @@
+version: "3.1"
+services:
+  blynk-bridge:
+    image: blynk-bridge:latest
+    container_name: blynk-bridge
+    environment: 
+      - BLYNK_AUTH_CODE=FB5TgNpi4BCk12Q2vF8MHvIpWeQmRdJ-
+      - BLYNK_HOST=192.168.0.120
+      - BLYNK_PORT=8400
+      - MQTT_HOST=mqtt://192.168.0.117:1883
+    volumes:
+      - ./data:/usr/src/app/data
+    restart: always

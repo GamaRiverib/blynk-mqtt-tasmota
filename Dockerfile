@@ -11,4 +11,6 @@ RUN rm tsconfig.json
 RUN npm i --only=prod
 RUN rm package.json
 RUN rm package-lock.json
+RUN mkdir data
+VOLUME [ "/usr/src/app/data" ]
 CMD ["node", "build/index.js"]

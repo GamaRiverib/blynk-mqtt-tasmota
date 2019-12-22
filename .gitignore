@@ -6,3 +6,4 @@ test/**/*.js.map
 .nyc_output
 example/*.key
 logs
+data
