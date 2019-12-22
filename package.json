@@ -1,0 +1,41 @@
+{
+  "name": "blynk-bridge",
+  "version": "0.1.0",
+  "description": "Blynk Client Bridge to MQTT Broker",
+  "main": "build/index.js",
+  "private": true,
+  "engines": {
+    "node": "^10.15.3",
+    "npm": "^6.4.1"
+  },
+  "scripts": {
+    "start": "node build/index.js",
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "tsc": "tsc"
+  },
+  "keywords": [
+    "Blynk",
+    "Bridge",
+    "MQTT"
+  ],
+  "author": {
+    "name": "José Gamaliel Rivera Ibarra",
+    "email": "jgrivera@novutek.com"
+  },
+  "repository": {
+    "type": "git"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "12.12.5",
+    "tsc": "1.20150623.0",
+    "typescript": "3.6.4"
+  },
+  "dependencies": {
+    "blynk-library": "0.5.4",
+    "chalk": "3.0.0",
+    "mqtt": "3.0.0",
+    "winston": "3.2.1"
+  }
+}
